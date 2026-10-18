@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retail Sales Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#f5f7fa; --card:#fff; --text:#1a1a1a; --muted:#5c6670; --accent:#0b3d75; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14181d; --card:#1e242b; --text:#eef1f4; --muted:#a3adb8; --accent:#6ea8ee; color-scheme: dark; } }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); }
+  h1 { font-size:1.3rem; margin:0 0 4px; color:var(--accent); }
+  .sub { color:var(--muted); font-size:.85rem; margin-bottom:14px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px; }
+  .card { background:var(--card); border-radius:10px; padding:12px; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  .kpi .v { font-size:1.25rem; font-weight:700; color:var(--accent); }
+  .kpi .l { font-size:.75rem; color:var(--muted); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; }
+  .card h2 { font-size:.95rem; margin:0 0 8px; }
+  canvas { max-width:100%; }
+  ol { padding-left:18px; margin:0; font-size:.88rem; line-height:1.5; }
+</style>
+</head>
+<body>
+<h1>Retail Sales Analytics Dashboard</h1>
+<div class="sub">Synthetic sample dataset for practice. Generated and analysed with Python.</div>
+<div class="kpis" id="kpis"></div>
+<div class="grid">
+  <div class="card"><h2>Monthly Sales</h2><canvas id="month"></canvas></div>
+  <div class="card"><h2>Sales and Profit by Category</h2><canvas id="cat"></canvas></div>
+  <div class="card"><h2>Sales by Region</h2><canvas id="region"></canvas></div>
+  <div class="card"><h2>Sales by Customer Segment</h2><canvas id="seg"></canvas></div>
+  <div class="card"><h2>Top 5 Products by Sales</h2><canvas id="prod"></canvas></div>
+  <div class="card"><h2>Key Insights</h2><ol id="ins"></ol></div>
+</div>
+<script src="data.js"></script>
+<script>
+const D = DASHBOARD_DATA, k = D.kpi;
+const inr = n => "₹" + Math.round(n).toLocaleString("en-IN");
+const cards = [["Total Sales", inr(k.total_sales)], ["Total Profit", inr(k.total_profit)],
+  ["Profit Margin", k.profit_margin_pct + "%"], ["Orders", k.orders.toLocaleString("en-IN")],
+  ["Avg Order Value", inr(k.avg_order_value)]];
+document.getElementById("kpis").innerHTML = cards.map(c => `<div class="card kpi"><div class="v">${c[1]}</div><div class="l">${c[0]}</div></div>`).join("");
+document.getElementById("ins").innerHTML = D.insights.map(t => `<li>${t}</li>`).join("");
+const pal = ["#0b6bcb", "#2fa37a", "#e0902f", "#8e5bd0", "#d0505a"];
+const names = a => a.map(x => x.name);
+const opt = { responsive: true, plugins: { legend: { labels: { color: "#8a95a0" } } },
+  animation: false, scales: { x: { ticks: { color: "#8a95a0" } }, y: { beginAtZero: true, ticks: { color: "#8a95a0" } } } };
+new Chart(month, { type: "line", data: { labels: names(D.month), datasets: [{ label: "Sales", data: D.month.map(x => x.sales), borderColor: pal[0], tension: .3 }] }, options: opt });
+new Chart(cat, { type: "bar", data: { labels: names(D.category), datasets: [{ label: "Sales", data: D.category.map(x => x.sales), backgroundColor: pal[0] }, { label: "Profit", data: D.category.map(x => x.profit), backgroundColor: pal[1] }] }, options: opt });
+new Chart(region, { type: "bar", data: { labels: names(D.region), datasets: [{ label: "Sales", data: D.region.map(x => x.sales), backgroundColor: pal }] }, options: { ...opt, plugins: { legend: { display: false } } } });
+new Chart(seg, { type: "doughnut", data: { labels: names(D.segment), datasets: [{ data: D.segment.map(x => x.sales), backgroundColor: pal }] }, options: { responsive: true, animation: false, plugins: { legend: { labels: { color: "#8a95a0" } } } } });
+new Chart(prod, { type: "bar", data: { labels: names(D.top_products), datasets: [{ label: "Sales", data: D.top_products.map(x => x.sales), backgroundColor: pal[2] }] }, options: { ...opt, plugins: { legend: { display: false } } } });
+</script>
+</body>
+</html>
